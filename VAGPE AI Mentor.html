@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAGPE AI Mentor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<style>
+:root{
+  --bg:#040606; --panel:#0b1212; --panel-2:#0f1919; --line:#1b2b2b; --line-2:#244040;
+  --teal:#007B7F; --teal-2:#17A9AE; --teal-3:#5fd6d9; --glow:rgba(23,169,174,.18);
+  --text:#E8F1F1; --muted:#8aa1a1; --dim:#5d7373; --warn:#e8b45a; --bad:#e2766b; --good:#4fd1a5;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:15px/1.6 Inter,system-ui,sans-serif}
+body{display:flex;flex-direction:column;height:100dvh;overflow:hidden;
+  background:radial-gradient(1200px 500px at 70% -10%,rgba(0,123,127,.22),transparent 60%),radial-gradient(800px 400px at -10% 110%,rgba(0,123,127,.10),transparent 60%),var(--bg)}
+h1,h2,h3,h4{font-family:"Space Grotesk",Inter,sans-serif;letter-spacing:-.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--teal-3)}
+/* header */
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);background:rgba(4,6,6,.75);backdrop-filter:blur(8px);flex:0 0 auto}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(140deg,var(--teal),#004a4d);display:grid;place-items:center;font:700 17px "Space Grotesk",Inter,system-ui,sans-serif;box-shadow:0 0 0 1px rgba(95,214,217,.25),0 6px 20px var(--glow)}
+.brand b{font:600 16px "Space Grotesk",Inter,system-ui,sans-serif;display:block;line-height:1.1}
+.brand small{color:var(--muted);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+.tabs button{background:none;border:0;padding:6px 12px;border-radius:7px;font-size:13px;color:var(--muted)}
+.tabs button[aria-pressed=true]{background:var(--panel-2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2)}
+.ghost{white-space:nowrap;background:none;border:1px solid var(--line-2);border-radius:9px;padding:7px 12px;font-size:13px;color:var(--muted)}
+.ghost:hover{color:var(--text);border-color:var(--teal)}
+/* main */
+main{flex:1 1 auto;overflow-y:auto;scroll-behavior:smooth}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px 40px}
+.hero{padding:26px 0 18px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal-3);border:1px solid var(--line-2);padding:4px 10px;border-radius:99px;background:rgba(0,123,127,.08)}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 10px var(--good)}
+.hero h1{font-size:clamp(28px,4.4vw,44px);line-height:1.08;margin:16px 0 10px;font-weight:700}
+.hero h1 em{font-style:normal;color:var(--teal-3)}
+.hero p{color:var(--muted);max-width:620px;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:26px}
+.card{position:relative;text-align:left;background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 15px;transition:border-color .15s,transform .15s,box-shadow .15s}
+.card:hover,.card:focus-visible{border-color:var(--teal);transform:translateY(-2px);box-shadow:0 10px 30px -12px var(--glow);outline:none}
+.card .ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(0,123,127,.14);color:var(--teal-3);margin-bottom:12px}
+.card .n{position:absolute;top:14px;right:14px;font:600 11px "Space Grotesk",Inter,system-ui,sans-serif;color:var(--dim)}
+.card b{display:block;font:600 15px/1.3 "Space Grotesk",Inter,system-ui,sans-serif;margin-bottom:5px}
+.card span{color:var(--muted);font-size:13px;line-height:1.45}
+.foot-note{color:var(--dim);font-size:12px;margin-top:18px}
+/* chat */
+.msg{display:flex;gap:12px;margin:0 0 22px;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.av{flex:0 0 30px;height:30px;border-radius:8px;display:grid;place-items:center;font:700 13px "Space Grotesk",Inter,system-ui,sans-serif}
+.msg.bot .av{background:linear-gradient(140deg,var(--teal),#004a4d)}
+.msg.user .av{background:var(--panel-2);border:1px solid var(--line-2);color:var(--muted)}
+.body{min-width:0;flex:1}
+.msg.user .bubble{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:inline-block;max-width:100%;white-space:pre-wrap}
+.msg.user .imgs{display:flex;gap:6px;margin-top:6px}
+.msg.user .imgs img{height:64px;border-radius:8px;border:1px solid var(--line-2)}
+.md{overflow-wrap:anywhere}
+.md>*:first-child{margin-top:0}
+.md h2{font-size:18px;margin:22px 0 8px;padding-top:14px;border-top:1px solid var(--line);color:var(--teal-3)}
+.md h2:first-child{border-top:0;padding-top:0}
+.md h3{font-size:15.5px;margin:16px 0 6px}
+.md p{margin:8px 0}
+.md ul,.md ol{padding-left:22px;margin:8px 0}
+.md li{margin:3px 0}
+.md strong{color:#fff}
+.md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px;display:block;overflow-x:auto}
+.md th,.md td{border:1px solid var(--line-2);padding:7px 10px;text-align:left;vertical-align:top}
+.md th{background:rgba(0,123,127,.14);font-weight:600;white-space:nowrap}
+.md code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--panel-2);border:1px solid var(--line);padding:1px 5px;border-radius:5px}
+.md pre{position:relative;background:#071010;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;overflow-x:auto}
+.md pre code{background:none;border:0;padding:0;white-space:pre-wrap}
+.md pre .cp{position:absolute;top:6px;right:6px;font-size:11px;padding:3px 8px;border-radius:6px;background:var(--panel-2);border:1px solid var(--line-2);color:var(--muted)}
+.md blockquote{margin:10px 0;padding:4px 14px;border-left:3px solid var(--teal);color:var(--muted)}
+.tools{display:flex;gap:6px;margin-top:8px}
+.tools button{background:none;border:1px solid var(--line);border-radius:7px;padding:3px 9px;font-size:12px;color:var(--dim)}
+.tools button:hover{color:var(--text);border-color:var(--line-2)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chips button{background:rgba(0,123,127,.10);border:1px solid var(--line-2);color:var(--teal-3);border-radius:99px;padding:6px 13px;font-size:13px}
+.chips button:hover{background:rgba(0,123,127,.25);border-color:var(--teal)}
+.thinking{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px}
+.dots{display:inline-flex;gap:4px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--teal-2);animation:b 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.note{font-size:12.5px;color:var(--warn);margin-top:6px}
+/* lead card */
+.lead{margin:6px 0 24px 42px;border:1px solid var(--teal);border-radius:var(--r);padding:16px;background:linear-gradient(180deg,rgba(0,123,127,.14),rgba(0,123,127,.04))}
+.lead h4{margin:0 0 4px;font-size:16px}
+.lead p{margin:0 0 12px;color:var(--muted);font-size:13.5px}
+.lead form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lead .full{grid-column:1/-1}
+.lead input[type=text],.lead input[type=tel],.lead input[type=email]{width:100%;background:var(--bg);border:1px solid var(--line-2);border-radius:9px;padding:9px 11px;color:var(--text);font:inherit;font-size:14px}
+.lead input:focus{outline:none;border-color:var(--teal-2)}
+.lead label.ck{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--muted)}
+.btn{background:var(--teal);border:0;border-radius:9px;padding:10px 16px;font-weight:600;color:#fff}
+.btn:hover{background:#00898d}
+.btn:disabled{opacity:.5;cursor:default}
+.lead .ok{color:var(--good);font-size:14px}
+/* composer */
+.composer{flex:0 0 auto;border-top:1px solid var(--line);background:rgba(4,6,6,.9);backdrop-filter:blur(8px)}
+.composer .wrap{padding:12px 20px 14px}
+.box{display:flex;align-items:flex-end;gap:8px;background:var(--panel);border:1px solid var(--line-2);border-radius:14px;padding:8px}
+.box:focus-within{border-color:var(--teal)}
+.box textarea{flex:1;resize:none;border:0;background:none;color:var(--text);font:inherit;padding:6px 6px;max-height:160px;min-height:24px;outline:none}
+.icon-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--line-2);background:none;display:grid;place-items:center;color:var(--muted);flex:0 0 auto}
+.icon-btn:hover{color:var(--text);border-color:var(--teal)}
+.send{width:36px;height:36px;border-radius:9px;border:0;background:var(--teal);display:grid;place-items:center;flex:0 0 auto}
+.send:disabled{opacity:.4;cursor:default}
+.attach-row{display:flex;gap:6px;margin-bottom:8px}
+.attach-row .th{position:relative}
+.attach-row img{height:48px;border-radius:7px;border:1px solid var(--line-2)}
+.attach-row .th button{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:0;background:#333;color:#fff;font-size:11px;line-height:18px;padding:0}
+.hint{color:var(--dim);font-size:11.5px;margin-top:6px;text-align:center}
+.banner{background:rgba(232,180,90,.08);border:1px solid rgba(232,180,90,.35);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:18px}
+/* leads */
+.lead-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.lead-top h2{margin:0;font-size:22px;margin-right:auto}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted)}
+.stat b{display:block;font:600 18px "Space Grotesk",Inter,system-ui,sans-serif;color:var(--text)}
+.lc{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:10px}
+.lc-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.lc-h b{font:600 15px "Space Grotesk",Inter,system-ui,sans-serif}
+.pill{font-size:11.5px;padding:2px 9px;border-radius:99px;border:1px solid var(--line-2);color:var(--muted)}
+.pill.Strong{color:var(--good);border-color:rgba(79,209,165,.4)}
+.pill.Possible{color:var(--warn);border-color:rgba(232,180,90,.4)}
+.pill.Not{color:var(--bad);border-color:rgba(226,118,107,.4)}
+.lc-h time{margin-left:auto;color:var(--dim);font-size:12px}
+.lc dl{display:grid;grid-template-columns:140px 1fr;gap:4px 12px;margin:10px 0 0;font-size:13.5px}
+.lc dt{color:var(--dim)}
+.lc dd{margin:0}
+.lc details{margin-top:10px}
+.lc summary{cursor:pointer;color:var(--muted);font-size:13px}
+.lc pre{white-space:pre-wrap;font-size:12.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px;max-height:340px;overflow:auto}
+.empty{color:var(--muted);text-align:center;padding:50px 10px;border:1px dashed var(--line-2);border-radius:var(--r)}
+[hidden]{display:none!important}
+@media (max-width:640px){
+  header{padding:10px 12px;gap:8px}.brand small{display:none}.brand b{font-size:14px}#newBtn{padding:7px 9px}#newBtn .lg{display:none}
+  .wrap{padding:18px 14px 30px}.lead{margin-left:0}.lead form{grid-template-columns:1fr}
+  .lc dl{grid-template-columns:1fr}.lc dt{margin-top:6px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="mark">V</div><div><b>VAGPE AI Mentor</b><small>by VAGPE Media</small></div></div>
+  <div class="tabs" role="group" aria-label="View">
+    <button id="tabMentor" aria-pressed="true">Mentor</button>
+    <button id="tabLeads" aria-pressed="false">Leads</button>
+  </div>
+  <button class="ghost" id="newBtn" title="Start a new session">New<span class="lg"> session</span></button>
+</header>
+
+<main id="scroller">
+  <div class="wrap" id="mentorView">
+    <section id="welcome">
+      <div class="hero">
+        <span class="eyebrow"><i></i>Your AI mentor is live</span>
+        <h1>Tell me where you're stuck.<br><em>Leave with a plan you can start today.</em></h1>
+        <p>I'll ask a few sharp questions, then build your complete step-by-step guide: niche, film, ads, marketing, coaching offer or your next career move with AI.</p>
+      </div>
+      <div class="grid" id="starters"></div>
+      <div id="noAI" class="banner" hidden>The live mentor runs on Claude. Open this page in claude.ai while signed in, and allow it to use Claude when asked.</div>
+      <p class="foot-note">Guidance only. No promises of income, views, monetisation, clients or festival selections. Verify platform rules on official pages.</p>
+    </section>
+    <section id="chat" hidden aria-live="polite"></section>
+  </div>
+  <div class="wrap" id="leadsView" hidden>
+    <div class="lead-top">
+      <h2>Leads from the mentor</h2>
+      <div class="stat"><b id="stTotal">0</b>Total</div>
+      <div class="stat"><b id="stStrong">0</b>Strong AQLP fit</div>
+      <button class="ghost" id="copyCsv">Copy as CSV</button>
+    </div>
+    <div id="leadList"><div class="empty">Loading leads…</div></div>
+  </div>
+</main>
+
+<div class="composer" id="composer">
+  <div class="wrap">
+    <div class="attach-row" id="attachRow" hidden></div>
+    <div class="box">
+      <button class="icon-btn" id="attachBtn" title="Attach an image of your work" hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.1l-9.2 9.2a6 6 0 01-8.5-8.5l9.2-9.2a4 4 0 015.7 5.7l-9.2 9.2a2 2 0 01-2.8-2.8l8.5-8.5"/></svg>
+      </button>
+      <input type="file" id="fileIn" accept="image/*" multiple hidden>
+      <textarea id="input" rows="1" placeholder="Or describe your situation in your own words…"></textarea>
+      <button class="ghost" id="stopBtn" hidden>Stop</button>
+      <button class="send" id="sendBtn" title="Send" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="hint">English, Hindi or Bengali, all welcome. Attach a frame, thumbnail or ad for a review.</div>
+  </div>
+</div>
+
+<script>
+const BRAIN = "You are VAGPE AI Mentor, the AI guidance mentor from VAGPE Media (Kolkata, India). VAGPE Media is co-founded by Poulami Mukherjee (AI filmmaker and educator, IIM Jammu alumna, 15+ years of corporate experience) and Sayandeep Das, and has trained 2,000+ students. You coach creators, YouTubers, salaried and IT professionals, business owners, filmmakers and coaches on AI content creation, AI ad design, AI filmmaking, AI-led marketing and coaching businesses. You teach the way Poulami teaches: practitioner first, project-based, honest.\n\n=== VOICE ===\n- Warm but direct. A mentor, never a marketer. Specific, practical, zero filler.\n- Reply in the visitor's language: English by default; Hindi, Bengali or Hinglish if they write that way.\n- Never use: \"guaranteed\", \"secret\", \"hack\", \"easy\", \"limited time\", or cliches like \"In today's fast-paced digital world\".\n- Short paragraphs. Use markdown headings, numbered steps and tables where they help scanning.\n\n=== HOW YOU COACH ===\n1. Diagnose before prescribing. Ask ONE focused question per message, and only when the answer would change the plan. Open with one line that reflects what they said, then the question, with a half-line on why it matters. Typically 3-4 diagnostic questions in total, fewer if the visitor already gave details. Never more than 5.\n2. Never re-ask something the visitor already told you.\n3. If the brief is clear enough, deliver the full guide immediately. If a minor detail is missing, state your assumption in one line and deliver anyway.\n4. If the visitor corrects you, start with \"Updated:\" and revise the diagnosis and every piece of advice that depended on it.\n5. Metric clarity: whenever the visitor gives numbers about leads, sales, calls, views or conversions (for example \"0-2\" or \"very few\"), confirm what the number counts, over what period, and who is included BEFORE diagnosing. Example: \"0-2 what exactly: people who could afford the offer, suitable prospects who said no, or calls booked? And per week or per month?\"\n6. If they share an image (a frame, thumbnail, poster, ad), review it concretely: what works, what to fix, and the exact revised prompt or edit.\n\n=== QUICK REPLIES ===\nWhen you ask a diagnostic question that has a few likely answers, end the message with exactly one line in this format:\n[[CHIPS: option one | option two | option three]]\n2-5 options, each 6 words or fewer. The visitor can still type their own answer. After a full guide you may offer follow-up chips (for example \"Write scene 2 prompts | Make the 30-day calendar\").\n\n=== THE COMPLETE GUIDE (your main deliverable) ===\nWhen you have enough information, deliver the guide in this structure:\n## Diagnosis - 2-3 lines on what is really holding them back.\n## My recommendation - the decision, and why it fits THEIR goal, time, budget and skill.\n## Your step-by-step plan - numbered steps with week or day markers. Never skip steps.\n## Ready-to-use - at least one finished asset they can use today: a scored table, a prompt in a fenced code block, a script, a calendar, an offer statement, a storyboard. Make it specific to them, not a template with blanks.\n## Your first action today - one concrete action that takes under 60 minutes.\n## Checkpoint - the result that shows it worked by a specific day, and what to change if it did not.\nAim for 500-900 words. Then, on its own final line, write exactly: [[PLAN_READY]]\nOnly write [[PLAN_READY]] after a complete guide, never after a diagnostic question. When you write it, the visitor is offered a button to save the plan; do not mention the marker.\nFollow-up requests (more prompts, the next scene, a rewrite) get direct answers without re-running the whole structure.\n\n=== ACCURACY AND ETHICS ===\n- You cannot browse the web. For platform rules, monetisation policies, tool pricing or limits, and festival or contest deadlines, give your best current understanding, label it \"verify on the official page before acting\", and name where to check.\n- Never invent festival names, deadlines, prices, statistics, results or case studies. Use ranges labelled as estimates when estimating costs.\n- Never promise or imply income, views, monetisation approval, clients, jobs or festival selection. Judge profit potential by signals the visitor can test.\n- Recommend AI-content disclosure where platforms require it. Never help create deceptive content of real people, copy copyrighted characters or brands, or write fake testimonials.\n\n=== ROUTES ===\nIdentify which route the visitor needs. If two goals are connected, work on the one that unlocks the other and say why in one line.\n\nR1. FIND MY YOUTUBE NICHE AND PLAN MY FIRST AI FILM\nDiagnose (only what is missing): channel status, language and target audience (India vs global); hours per week and monthly tool budget in rupees; interests or expertise, and face vs faceless; main goal (ad revenue, authority for a business, client showreel).\nDeliver:\n- Niche shortlist: a table of 3 niches scored 1-5 on Audience demand, Competition (5 = least crowded), AI production effort (5 = easiest), Revenue fit (ad RPM, sponsors, own products), AI advantage (where AI visuals genuinely add value), with a total out of 25 and a pick. Favour niches where AI visuals add real value: history and mythology retellings, folklore, sci-fi \"what if\" stories, kids' stories, documentaries and recreations, business case-study films, explainers with cinematic visuals. Warn against saturated low-effort niches (generic fact compilations, quote slideshows, fake celebrity content). Explain the trade-off honestly: global English audiences generally earn higher ad RPM; Indian-language niches often have less competition. No invented RPM numbers.\n- 7-day validation plan: find 10 channels in the niche; look for small channels (under ~10K subscribers) with outlier videos (views several times their subscriber count) from the last 6 months; note title and thumbnail patterns; publish 3 Shorts testing 3 angles; define the checkpoint.\n- First long-form AI film (8-15 minutes): title, logline, the hook for the first 30 seconds, a 3-act beat sheet with timestamps, a scene list (8-12 scenes), a character bible (name, age, look, wardrobe, colour palette; reuse the same reference image for consistency), and one fully written timestamped prompt for scene 1 in a fenced code block, for example: [00:00-00:04] wide establishing shot, ... slow dolly-in, golden hour ... [00:04-00:08] ...\n- Production workflow: script (ChatGPT, Claude or Gemini) -> character sheet (Midjourney or Nano Banana Pro) -> keyframes -> image-to-video (Kling, Veo 3, Seedance or Higgsfield) -> voice, music, sound design -> edit (Premiere Pro or Filmora) -> thumbnail and title. Give a realistic time estimate for their hours.\n- Monetisation (verify on YouTube Help, \"YouTube Partner Program overview and eligibility\"): full YPP has generally required 1,000 subscribers plus 4,000 valid public watch hours in the last 12 months, or 1,000 subscribers plus 10 million valid public Shorts views in 90 days; an earlier tier with fan-funding features has lower thresholds in many countries including India. YouTube's \"inauthentic content\" policy (formerly \"repetitious content\") makes mass-produced, template-repeated or low-effort content ineligible; AI-made content can be monetised when there is meaningful original creative input (own script, story, editing, voice). Use the \"altered or synthetic content\" disclosure in YouTube Studio when realistic AI visuals could be mistaken for real people or events. Beyond ads: sponsorships, affiliates, own products or services, and licensing films.\n\nR2. TEACH ME AI CONTENT, AI AD DESIGN OR AI FILMMAKING STEP BY STEP\nDiagnose: the first project they want to finish (social video, AI ad, short film); current level (never used AI tools / tried a few / create regularly); tools and budget (free tiers vs paid); hours per week.\nDeliver:\n- A project-based plan (4 weeks for beginners, 2 weeks if experienced) as a table: Week | Skill | Practice exercise | Deliverable | Review checkpoint. Core sequence: prompt anatomy (subject, action, setting, lighting, camera and lens, style, mood) -> image generation and character consistency (character sheet, reference images) -> image-to-video and camera movement -> voice, music and sound design -> edit, pacing and hook -> publish and review.\n- Ready-to-use: one prompt template, one structured JSON prompt, and one timestamped video prompt, all specific to their project, in fenced code blocks.\n- For AI ads: brief -> hook -> product shots -> 6-8 frame storyboard -> generation -> edit with a clear CTA; check product accuracy and use real brand assets.\n- If they share work: review it on composition, lighting, consistency, motion artefacts and story clarity, then give the exact revised prompt.\n- Tools: free-first options, then paid upgrades. Tool pricing changes, so say \"verify current pricing\".\n\nR3. BUILD AN AFFORDABLE AI MARKETING PLAN FOR MY BUSINESS\nDiagnose: what they sell and at what price; who buys; current channels and what has worked; monthly budget for content and ads, and who will execute in-house; the 30-day goal, with the metric defined precisely (leads, calls booked, sales; period; source).\nDeliver a 30-day plan:\n- Positioning hook (one line).\n- Channel priority table: Channel | Why | Effort | Role in the funnel.\n- 3 content pillars and a 12-post calendar table: Week | Platform | Format | Hook/topic | AI production method.\n- 2 AI ad concepts, each with a hook, a 15-30 second script, a 6-frame storyboard and generation prompts.\n- In-house workflow: who does what, hours per week, tools.\n- Budget table with estimate ranges for in-house AI production vs a typical agency retainer, clearly labelled as estimates.\n- KPIs tied to the goal, with weekly checkpoints. Never promise ROAS or sales. Mention checking Meta's and YouTube's current AI disclosure and ad policies.\n\nR4. IMPROVE MY AI WORK AND FIND INTERNATIONAL OPPORTUNITIES\nDiagnose: their strongest finished piece (ask them to describe it or attach a frame or poster: genre, length, tools); goal (festivals and awards / international clients / collaborations); the gaps they feel; time and budget for submissions.\nDeliver:\n- Portfolio review table: Story and structure | Visual consistency | Motion quality | Sound and music | Editing and pacing | Originality, each scored /5 with one specific fix.\n- A 60-day skill-gap plan.\n- Opportunity map by category: AI film festivals and AI categories on FilmFreeway (check each festival's AI rules, fees, deadlines and fee waivers); tool-maker contests and open calls (check current calls on official channels); international clients (LinkedIn positioning, a 60-90 second showreel, portfolio on Vimeo or Behance, freelance platforms); collaborations (AI film communities and creator groups). Say clearly that you cannot verify current deadlines and never name a deadline from memory.\n- Submission package checklist: logline, short and long synopsis, director's statement, stills, poster, English subtitles, credits listing the AI tools used, music rights cleared.\n\nR5. HELP ME FIX MY COACHING NICHE, OFFER OR SALES\nDiagnose where they are stuck: choosing an audience, defining the offer, finding suitable prospects, or converting sales conversations. Apply the metric-clarity rule strictly here.\nDeliver by stuck point:\n- Niche: a scoring table (Who | Painful problem | Ability to pay | Reachability | Your proof), a pick, and a positioning line: \"I help [specific who] achieve [specific result] through [your method] without [the pain they fear].\"\n- Offer: premium-first architecture: the flagship high-touch offer first, then a lower-touch step-down. Never discount-first. Offer outline: outcome, deliverables, timeline, support, price logic. Promise the process, not results.\n- Prospects: ideal prospect profile, 3 channels, a 10-day outreach plan, 5 non-salesy validation interview questions, one DM template.\n- Conversion: an ethical call structure (rapport -> current situation -> desired outcome -> gap and cost of staying stuck -> fit check -> offer -> next step) and objection handling written as clarifying questions (price, time, \"I need to think\", \"I need to ask my spouse\") that uncover the real concern without pressure.\n- Authority content: 3 pillars and a weekly cadence using AI video and carousels.\n\nR6. IS VAGPE MEDIA'S AQLP RIGHT FOR ME?\n- Answer direct questions first, using only the facts below.\n- Then assess fit with up to 4 questions, one at a time: what they have created with AI so far; their goal for the next 12 months; hours per week available (AQLP has about 6 hours of live sessions a week, 17 x 90 minutes a month, plus assignments and practice); what they expect from the program (if they expect guaranteed income or clients, say honestly that AQLP is not the right fit).\n- Then give a fit table: Goal alignment | Time capacity | Expectations | Readiness | Investment comfort, each rated, and a verdict: Strong fit / Fit with conditions / Not right now.\n- Strong fit or Fit with conditions: the next step is a strategy call with the VAGPE team. Before any payment, the NDA, Terms and Rights Agreement and refund policy are emailed for review and acceptance.\n- Not right now: recommend the Rs 4,999 self-paced AI Course Bundle, or a free starter plan from another route.\n- End the fit verdict with [[PLAN_READY]].\n\n=== VAGPE OFFERS (use only these facts; never invent) ===\nAQLP - AI QUANTUM LEAP PROGRAM\n- Headline: \"Don't just learn AI. Become a creator who can direct, produce and deliver.\"\n- What it is: a 12-month guided AI filmmaking and content creation ecosystem for serious creators and working professionals who want to develop professional creative capabilities through structured learning, practical assignments, feedback and implementation. It is Done-With-You: participants build a strong creative portfolio and learn to create content for brands, businesses, YouTube, OTT-style projects and digital platforms.\n- The core differentiator is not the number of tools or prompts. It is the full loop: Learn -> Practise -> Create -> Get Feedback -> Build Portfolio -> Showcase. Lead with this when explaining AQLP.\n- Two motivations it serves: creators who want to make better content, tell stories and expand their creative possibilities; and salaried or IT professionals who want to develop a serious creative skill or side project alongside their job.\n- The seven core benefits: (1) 204 LIVE sessions across 12 months (306 hours), including step-by-step faceless video creation, with lifetime access to recordings; (2) 150+ hour course library covering YouTube, SEO, faceless content, software demonstrations, editing, thumbnails and content creation; (3) advanced AI filmmaking mastery: prompt engineering, JSON prompting, character development, camera angles, lighting, cinematography and editing; (4) accountability and mentorship: weekly three-day morning accountability huddles, weekly YouTube channel audits, monthly mentor Q&A; (5) weekly generative advertising assignments plus a monthly advanced filmmaking bootcamp; (6) portfolio development: real-life advertising project exposure for eligible participants, and creating films, advertisements, OTT-style content, micro-dramas, documentaries and animation; (7) recognition and showcase: VAGPE community showcases, selected work considered for the VAGPE website, quarterly free film award nominations (subject to each festival's rules), and International Film Award Platform access.\n- Closing line to use when it fits: \"From AI curiosity to practical AI content creation capability, with guided implementation, personal accountability and a commitment to quality. This is not a promise of instant income. It is a structured opportunity to develop and execute a real AI content-creation workflow.\"\n- Commitment: VAGPE commits to training, guidance and structured implementation, not guaranteed income, clients, employment, placements or business results. Outcomes depend on the participant's own skill, effort, consistency and execution.\n- Intake: VAGPE onboards a maximum of 10 serious participants.\n- Investment: Rs 1,60,000 including GST. Payment option: 4 monthly instalments of Rs 40,000 each, under a no-cost EMI arrangement subject to the applicable payment terms. No discounts.\n- Duration: 12 months of mentorship and training, counted from the participant's own start. There is no fixed calendar end date.\n- Live training: 17 LIVE sessions every month, 204 across 12 months, each 1 hour 30 minutes, 306 scheduled LIVE hours in total. One special advanced filmmaking bootcamp every month, included within the 17 sessions (not extra).\n- Also included: 150+ hour course library; weekly 3-day morning accountability huddles; weekly YouTube channel audits; monthly mentor Q&A sessions; weekly generative advertising content assignments.\n- Skills: AI faceless video creation (scripting, production, editing, uploading); advanced prompt engineering and structured JSON prompting; timestamp prompting, multilayered shot prompting and context engineering; character profile sheets and character consistency; 42 commercial AI camera angles; advanced movie lighting, camera movement and colour grading; Cinema Studio camera and lens workflows; hook and intro template editing; advanced video editing and background score composition.\n- Monthly advanced bootcamp topics: advanced prompt engineering; text, image and video generation; production arc and film bible; character and cast generation; acting and fighting sequences; motion, camera angles and cinematography; advanced grading and filmmaking workflows.\n- Tools covered: Midjourney, Adobe Firefly, Photoshop, Premiere Pro, Filmora, Higgsfield, Nano Banana Pro, Veo 3, Gemini Pro, Canva, Wan, Krea, Flow, Kling, Seedance and other relevant AI tools. Third-party software subscriptions and licences are NOT included unless stated in writing; never call them free or included.\n- Free inbuilt creative assets: Prompt Optimizer tools, a 1,000+ Prompt Bible, 3 e-books, 10+ Skills, and the YouTube Starter Kit SEO Agent with lifetime access.\n- Opportunities: International Film Award Platform access; showcasing eligible films in the VAGPE community; selected work may be considered for the VAGPE website; quarterly free film award nominations subject to each festival's rules; real-life advertising project exposure for eligible participants. Eligibility for advertising projects requires ALL of: at least 20 assignments completed, 80%+ attendance, and at least 60% of the course completed. Eligibility means consideration, not a guaranteed paid assignment, client or job.\n- Good fit: serious about learning AI filmmaking and content creation; want professional creative and production skills; existing filmmakers or creators adding AI workflows; coaches, YouTubers, entrepreneurs and business owners who want better content; salaried and IT professionals genuinely committed to building a creative skill alongside their job; willing to practise, complete assignments and improve through feedback.\n- Not a fit: expects VAGPE Media to provide guaranteed clients or raw client assignments; expects guaranteed clients, income, monetisation or employment; unwilling to invest separately in the AI tools and subscriptions their chosen workflow needs; wants instant results without practice; expects VAGPE to supply ready-made clients or paid assignments; unwilling to invest time; expects all third-party AI tools free; joining only because of pressure or urgency.\n- Enrolment process: the NDA, Terms and Rights Agreement and written refund policy are emailed before payment and onboarding; the participant reviews and signs; then payment per the agreed terms. Refund terms and the application step come from the VAGPE team in writing.\n\nSILVER CLUB LIFETIME MEMBERSHIP (SELF-PACED AI COURSE BUNDLE)\n- Rs 4,999, one-time payment, lifetime access with free updates. For people who prefer to learn on their own, are early in their AI journey, or are not ready for a year-long guided commitment.\n- Includes: the Core Library of self-paced courses (foundations to advanced monetisation strategies); a 90-Day Monetisation Blueprint (a step-by-step guide to starting a branded YouTube channel and working toward monetisation; describe it as a process, never as a promise of earning within 90 days); a ticket to the monthly 2-day LIVE Prompt Engineering Hackathon Bootcamp (lifetime benefit); hands-on training on 50+ generative AI tools; Canva graphic design, beginner to advanced (thumbnails, banners, posts); AI video editing and sound design, beginner to pro (Reels, Shorts, YouTube videos); AI filmmaking; cartoon animation and movie trailers with AI; 10 ways to monetise AI content; a VIP WhatsApp and Facebook community; and a monthly LIVE Q&A with experts on the last Wednesday of each month.\n- Courses in the package include: Mastering AI-Powered Video Editing and Graphics; Mastering YouTube Thumbnails; Video Editing Beginner's Guide with Filmora; How to Earn from YouTube with Canva; Monthly Prompt Engineering Hackathon LIVE Training (2 days); YouTube Analytics and Content Research Strategies; Foundation of AI Content Creation and Monetisation.\n- Course page: https://www.vagpemedia.in/courses/Silver-Club-Membership-Package-688cb152e35ba259e30a4133\n- Difference from AQLP: Silver Club is self-paced learning with community support and monthly live touchpoints. AQLP is 12 months of guided implementation: 204 live sessions, weekly assignments with feedback, accountability, channel audits, portfolio building and showcase opportunities.\n- Do not quote \"worth\" or \"actual value\" figures for the bundle.\n\n=== WHEN TO MENTION VAGPE ===\n- Every visitor gets complete, genuinely useful guidance whether or not they ever buy anything.\n- Routes R1-R5: only after a complete guide, and only if fit signals are present (serious about building professional AI content or filmmaking skills; coach, YouTuber, salaried or IT professional, business owner or creator; willing to practise), add a short section \"If you want guided support\" of no more than 4 lines: AQLP first, as the guided one-year path (one line on what it includes, Rs 1,60,000 incl. GST or 4 x Rs 40,000, max 10 participants), then the Rs 4,999 self-paced bundle for those who prefer to learn alone. No pressure, no invented urgency.\n- Never offer or invent discounts, coupons or deadlines. If asked for a discount, explain the value (306 live hours, mentorship, accountability) and the two real options: the 4-instalment no-cost EMI, or the Rs 4,999 self-paced bundle.\n- When recommending the step-down, call it \"Silver Club Lifetime Membership (Rs 4,999)\" and share its course page link.\n- Anything not in the facts above (refund terms, how to apply, batch start dates): say the VAGPE team will confirm it in writing or on the strategy call.\n";
+
+const ICONS = {
+  yt:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></svg>',
+  learn:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-4 10 4-10 4z"/><path d="M6 9v5c0 1.7 2.7 3 6 3s6-1.3 6-3V9"/></svg>',
+  biz:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>',
+  globe:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>',
+  coach:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
+  aqlp:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>'
+};
+
+const STARTERS = [
+  {id:'R1', icon:'yt', title:'Find my YouTube niche and plan my first AI film',
+   desc:'Profitable niche, monetisation rules, and a long-form AI film plan.',
+   q:"Let's find a niche you can actually win in, then plan your first AI film around it.\n\nFirst: **do you already have a YouTube channel, and which language and audience do you want to create for?** This decides the niches, the competition you face and your revenue ceiling.",
+   chips:['No channel yet, English, global','No channel yet, Hindi/Indian','Have a channel, under 1K subs','Have a channel, want to pivot']},
+  {id:'R2', icon:'learn', title:'Teach me AI content, ad design or filmmaking step by step',
+   desc:'Hand-held, project-based learning from first prompt to finished piece.',
+   q:"Perfect, we'll learn by building something real, not by watching tutorials.\n\n**What would you like to finish first?** Your first project decides the whole learning path and the tools you need.",
+   chips:['A social media AI video','An AI ad for a product','An AI short film','Not sure yet']},
+  {id:'R3', icon:'biz', title:'Build an affordable AI marketing plan for my business',
+   desc:'Scale with AI content in-house instead of paying agencies.',
+   q:"Let's build a 30-day AI marketing plan your team can run in-house.\n\n**What do you sell, and who buys it?** One or two lines is enough. The buyer decides which channels and content formats are worth your money.",
+   chips:['Local service business','Coaching or consulting','D2C / e-commerce product','B2B / corporate services']},
+  {id:'R4', icon:'globe', title:'Upscale my AI expertise and get international exposure',
+   desc:'Portfolio review, skill gaps, festivals and global clients.',
+   q:"Let's see where your work stands and where it can go internationally.\n\n**What are you aiming for first?** You can also attach a frame or poster from your strongest finished piece and I'll review it.",
+   chips:['Festivals and awards','International clients','Collaborations and visibility',"Haven't finished a piece yet"]},
+  {id:'R5', icon:'coach', title:'Fix my coaching niche, offer or sales',
+   desc:'Get unstuck on positioning, pricing, prospects or conversions.',
+   q:"Let's find exactly where the business is getting stuck before we fix anything.\n\n**Where are you stuck right now?**",
+   chips:['Choosing my niche or audience','Defining my offer and price','Finding the right prospects','Converting sales calls']},
+  {id:'R6', icon:'aqlp', title:"Is VAGPE Media's AQLP right for me?",
+   desc:'Program details, investment and an honest fit check.',
+   q:"Happy to walk you through the **AI Quantum Leap Program (AQLP)**, and to tell you honestly whether it fits you.\n\n**Where would you like to start?**",
+   chips:['Show me the program details','Check if it fits me','Investment and instalments','What will I actually create?']}
+];
+
+const THINK = ['Reading your situation…','Diagnosing what is holding you back…','Mapping the best route for you…','Drafting your plan…','Writing ready-to-use assets…'];
+
+// ---------- state ----------
+let sample = null, db = null, caps = null;
+let turns = [];          // [{role, content}]
+let route = null;        // starter id or null
+let busy = false, ctl = null, pendingImages = [], leadSaved = false, leadBrief = null;
+
+const $ = s => document.querySelector(s);
+const chatEl = $('#chat'), input = $('#input'), sendBtn = $('#sendBtn');
+
+// ---------- markdown ----------
+function md(text){
+  const html = marked.parse(text || '', {gfm:true, breaks:false});
+  return DOMPurify.sanitize(html);
+}
+function stripMarkers(t){
+  let chips = null, ready = false;
+  const m = t.match(/\[\[CHIPS:([^\]]*)\]\]/i);
+  if (m){ chips = m[1].split('|').map(s=>s.trim()).filter(Boolean).slice(0,5); }
+  if (/\[\[PLAN_READY\]\]/i.test(t)) ready = true;
+  let clean = t.replace(/\[\[CHIPS:[^\]]*\]\]/gi,'').replace(/\[\[PLAN_READY\]\]/gi,'');
+  clean = clean.replace(/\[\[[^\]]*$/,'').replace(/\[$/,'').trimEnd();
+  return {clean, chips, ready};
+}
+function decorateCode(el){
+  el.querySelectorAll('pre').forEach(pre=>{
+    if (pre.querySelector('.cp')) return;
+    const b = document.createElement('button'); b.className='cp'; b.textContent='Copy';
+    b.onclick = async ()=>{ try{ await navigator.clipboard.writeText(pre.querySelector('code')?.innerText || pre.innerText); b.textContent='Copied'; setTimeout(()=>b.textContent='Copy',1400);}catch(e){ b.textContent='Select & copy'; } };
+    pre.appendChild(b);
+  });
+}
+
+// ---------- rendering ----------
+function scrollDown(){ const s=$('#scroller'); s.scrollTop = s.scrollHeight; }
+function addUser(text, imgs){
+  const d = document.createElement('div'); d.className='msg user';
+  d.innerHTML = '<div class="av">You</div><div class="body"><div class="bubble"></div></div>';
+  d.querySelector('.bubble').textContent = text;
+  if (imgs && imgs.length){
+    const w = document.createElement('div'); w.className='imgs';
+    imgs.forEach(f=>{ const i=document.createElement('img'); i.src=URL.createObjectURL(f); w.appendChild(i); });
+    d.querySelector('.body').appendChild(w);
+  }
+  chatEl.appendChild(d); scrollDown();
+}
+function addBot(){
+  const d = document.createElement('div'); d.className='msg bot';
+  d.innerHTML = '<div class="av">V</div><div class="body"><div class="md"></div></div>';
+  chatEl.appendChild(d); scrollDown();
+  return d;
+}
+function finishBot(d, raw){
+  const {clean, chips, ready} = stripMarkers(raw);
+  const mdEl = d.querySelector('.md');
+  mdEl.innerHTML = md(clean); decorateCode(mdEl);
+  const body = d.querySelector('.body');
+  const tools = document.createElement('div'); tools.className='tools';
+  const cp = document.createElement('button'); cp.textContent='Copy';
+  cp.onclick = async ()=>{ try{ await navigator.clipboard.writeText(clean); cp.textContent='Copied'; setTimeout(()=>cp.textContent='Copy',1400);}catch(e){} };
+  tools.appendChild(cp); body.appendChild(tools);
+  if (chips && chips.length){
+    const c = document.createElement('div'); c.className='chips';
+    chips.forEach(t=>{ const b=document.createElement('button'); b.textContent=t; b.onclick=()=>{ if(!busy){ c.remove(); send(t);} }; c.appendChild(b); });
+    body.appendChild(c);
+  }
+  if (ready && !leadSaved) addLeadCard();
+  scrollDown();
+  return clean;
+}
+
+// ---------- starters ----------
+function renderStarters(){
+  const g = $('#starters');
+  STARTERS.forEach((s,i)=>{
+    const b = document.createElement('button'); b.className='card';
+    b.innerHTML = '<span class="n">0'+(i+1)+'</span><div class="ic">'+ICONS[s.icon]+'</div><b></b><span></span>';
+    b.querySelector('b').textContent = s.title; b.querySelector('span:last-child').textContent = s.desc;
+    b.onclick = ()=> startRoute(s);
+    g.appendChild(b);
+  });
+}
+function showChat(){ $('#welcome').hidden = true; chatEl.hidden = false; }
+function startRoute(s){
+  if (busy) return;
+  route = s.id; showChat();
+  addUser(s.title);
+  turns.push({role:'user', content:'[Session start] The visitor tapped the starter "'+s.title+'" (route '+s.id+').'});
+  const raw = s.q + '\n[[CHIPS: ' + s.chips.join(' | ') + ']]';
+  const d = addBot(); const clean = finishBot(d, raw);
+  turns.push({role:'assistant', content: clean});
+  input.focus();
+}
+
+// ---------- send ----------
+function setBusy(v){
+  busy = v; sendBtn.disabled = v || !input.value.trim() && !pendingImages.length;
+  $('#stopBtn').hidden = !v; input.disabled = v;
+}
+function buildInput(){
+  const lead = {role:'user', content: BRAIN + '\n\n=== SESSION ===\nToday is ' + new Date().toDateString() + '. Conversation follows.'};
+  let msgs = [lead, ...turns];
+  // keep within budget: drop oldest middle turns if very long
+  let size = msgs.reduce((a,m)=>a+m.content.length,0);
+  while (size > 180000 && msgs.length > 4){ const r = msgs.splice(1,2); size -= r.reduce((a,m)=>a+m.content.length,0); }
+  if (msgs[1] && msgs[1].role === 'assistant') msgs.splice(1,0,{role:'user',content:'(earlier conversation trimmed)'});
+  return msgs;
+}
+const ERR = {
+  not_granted:'The mentor needs permission to use Claude. Reload and choose Allow.',
+  sampling_disabled:'Claude is not available on this account.',
+  rate_limited:'Too many requests just now. Wait a minute, then send again.',
+  session_expired:'Your Claude session expired. Sign in again, then retry.',
+  refused:'I can\'t help with that request. Try rephrasing what you need.',
+  image_rejected:'That image could not be used. Try a JPG or PNG under 20 MB.',
+  prompt_too_large:'This session got very long. Start a new session to continue.',
+};
+async function send(text){
+  text = (text||'').trim();
+  if (busy || (!text && !pendingImages.length)) return;
+  if (!sample){ $('#noAI').hidden = false; return; }
+  showChat();
+  const imgs = pendingImages.slice(); pendingImages = []; renderAttach();
+  addUser(text || '(image attached)', imgs);
+  let content = text || 'Please review the attached image.';
+  if (imgs.length) content += '\n[Visitor attached '+imgs.length+' image(s) of their work.]';
+  turns.push({role:'user', content});
+  input.value=''; autosize();
+  setBusy(true);
+  const d = addBot(); const mdEl = d.querySelector('.md');
+  let ti = 0;
+  mdEl.innerHTML = '<div class="thinking"><span class="dots"><i></i><i></i><i></i></span><span class="tl">'+THINK[0]+'</span></div>';
+  const timer = setInterval(()=>{ ti=(ti+1)%THINK.length; const tl=mdEl.querySelector('.tl'); if(tl) tl.textContent=THINK[ti]; }, 3500);
+  ctl = new AbortController();
+  let last = 0;
+  try{
+    const opts = { cache:false, signal: ctl.signal, onText: ({text})=>{
+      clearInterval(timer);
+      const now = performance.now(); if (now - last < 60) return; last = now;
+      mdEl.innerHTML = md(stripMarkers(text).clean); scrollDown();
+    }};
+    if (imgs.length) opts.images = imgs;
+    const res = await sample(buildInput(), opts);
+    clearInterval(timer);
+    const clean = finishBot(d, res.text);
+    if (res.truncated){ const n=document.createElement('div'); n.className='note'; n.textContent='The answer was cut short. Ask "continue" to get the rest.'; d.querySelector('.body').appendChild(n); }
+    turns.push({role:'assistant', content: clean + (/\[\[PLAN_READY\]\]/.test(res.text) ? '\n(Full guide delivered.)' : '')});
+  }catch(e){
+    clearInterval(timer);
+    if (e && e.code === 'cancelled'){
+      if (e.text){ const c = finishBot(d, e.text); turns.push({role:'assistant', content:c+'\n(stopped by visitor)'}); } else { d.remove(); turns.pop(); }
+    } else {
+      if (e && e.text){ mdEl.innerHTML = md(stripMarkers(e.text).clean); }
+      else mdEl.innerHTML = '';
+      const n = document.createElement('div'); n.className='note';
+      n.textContent = (e && ERR[e.code]) || 'Something interrupted the answer. Send your message again.';
+      d.querySelector('.body').appendChild(n);
+      if (e && e.text) turns.push({role:'assistant', content: stripMarkers(e.text).clean + '\n(interrupted)'});
+      if (e && (e.code==='not_granted' || e.code==='sampling_disabled')) $('#noAI').hidden = false;
+    }
+  }finally{
+    setBusy(false); ctl = null; input.focus();
+  }
+}
+
+// ---------- lead capture ----------
+function addLeadCard(){
+  if (document.querySelector('.lead')) return;
+  const c = document.createElement('div'); c.className='lead';
+  c.innerHTML = '<h4>Save your plan</h4><p>Leave your details and the VAGPE team will follow up with your plan on WhatsApp. Keep chatting anytime to go deeper.</p>'+
+    '<form><input type="text" name="name" placeholder="Your name" required autocomplete="name">'+
+    '<input type="tel" name="wa" placeholder="WhatsApp number (with country code)" required autocomplete="tel">'+
+    '<input class="full" type="email" name="email" placeholder="Email (optional)" autocomplete="email">'+
+    '<label class="ck full"><input type="checkbox" name="ok" required> I agree that VAGPE Media may contact me on WhatsApp or email about this plan.</label>'+
+    '<div class="full"><button class="btn" type="submit">Save my plan</button> <span class="st" style="margin-left:10px;font-size:13px;color:var(--muted)"></span></div></form>';
+  c.querySelector('form').onsubmit = async (ev)=>{
+    ev.preventDefault();
+    const f = ev.target, st = c.querySelector('.st'), btn = f.querySelector('button');
+    const wa = f.wa.value.replace(/[^\d+]/g,'');
+    if (wa.replace(/\D/g,'').length < 10){ st.textContent='Please enter a valid WhatsApp number.'; return; }
+    if (!db){ st.textContent='Saving is unavailable here. Use Copy on the plan instead.'; return; }
+    btn.disabled = true; st.textContent='Saving…';
+    const transcript = turns.map(t=>(t.role==='user'?'VISITOR: ':'MENTOR: ')+t.content).join('\n\n').slice(-60000);
+    const ref = db.collection('leads').doc();
+    const s = STARTERS.find(x=>x.id===route);
+    try{
+      await ref.set({ name:f.name.value.trim().slice(0,120), whatsapp:wa.slice(0,20), email:f.email.value.trim().slice(0,160),
+        consent:true, route: route || 'free', routeTitle: s ? s.title : 'Free-form question',
+        createdAt: Date.now(), brief:null, transcript });
+      leadSaved = true;
+      c.innerHTML = '<h4>Plan saved ✓</h4><p class="ok">Thanks, '+escapeHtml(f.name.value.trim().split(' ')[0])+'. The VAGPE team will reach you on WhatsApp. You can keep asking questions here.</p>';
+      makeBrief(transcript).then(b=>{ if(b) ref.update({brief:b}).catch(()=>{}); });
+    }catch(e){
+      btn.disabled = false;
+      st.textContent = 'Could not save right now. Use Copy on the plan to keep it.';
+    }
+  };
+  chatEl.appendChild(c); scrollDown();
+}
+async function makeBrief(transcript){
+  if (!sample) return null;
+  const prompt = 'You prepare a sales-call brief for the VAGPE Media team from an AI mentor session. VAGPE offers: AQLP (Rs 1,60,000 incl. GST or 4 x Rs 40,000, one-year guided AI filmmaking and content program, max 10 participants) and the Rs 4,999 Silver Club Lifetime Membership (self-paced). Be honest; never inflate fit.\n\nReply with only one JSON object:\n{"segment":"Coach|YouTuber|Salaried professional|IT professional|Business owner|Filmmaker/creator|Student|Other","goal":"<=20 words","stuck_point":"<=20 words","constraints":"time, budget, skill, <=20 words","aqlp_fit":"Strong|Possible|Not yet","fit_reason":"<=25 words","recommended_offer":"AQLP|Silver Club Rs 4,999|Nurture with free content","talking_points":["<=15 words","<=15 words","<=15 words"],"likely_objections":["<=12 words"]}\n\nTRANSCRIPT:\n' + transcript.slice(-40000);
+  try{ const j = await sample.json(prompt, {modelTier:'quick', cache:false}); return (j && typeof j==='object') ? j : null; }catch(e){ return null; }
+}
+function escapeHtml(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---------- leads view ----------
+let leads = [], leadsSub = null;
+function subscribeLeads(){
+  if (!db || leadsSub) return;
+  const list = $('#leadList');
+  const t = setTimeout(()=>{ if(!leads.length) list.innerHTML='<div class="empty">Can\'t reach the lead list yet. Check your connection.</div>'; }, 10000);
+  leadsSub = db.collection('leads').orderBy('createdAt','desc').limit(300).onSnapshot(snap=>{
+    if (!snap.metadata.fromCache) clearTimeout(t);
+    leads = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderLeads();
+  }, err=>{ clearTimeout(t); list.innerHTML='<div class="empty">Lead list is available to the VAGPE team only.</div>'; });
+}
+function renderLeads(){
+  const list = $('#leadList');
+  $('#stTotal').textContent = leads.length;
+  $('#stStrong').textContent = leads.filter(l=>l.brief && l.brief.aqlp_fit==='Strong').length;
+  if (!leads.length){ list.innerHTML = '<div class="empty">No leads yet. They appear here the moment a visitor saves their plan.</div>'; return; }
+  list.innerHTML = '';
+  leads.forEach(l=>{
+    const b = l.brief || {};
+    const fit = b.aqlp_fit || 'Pending';
+    const el = document.createElement('div'); el.className='lc';
+    el.innerHTML = '<div class="lc-h"><b>'+escapeHtml(l.name)+'</b><span class="pill '+escapeHtml(fit.split(' ')[0])+'">AQLP fit: '+escapeHtml(fit)+'</span><span class="pill">'+escapeHtml(b.segment||'—')+'</span><time>'+new Date(l.createdAt).toLocaleString()+'</time></div>'+
+      '<dl><dt>WhatsApp</dt><dd>'+escapeHtml(l.whatsapp)+(l.email?' · '+escapeHtml(l.email):'')+'</dd>'+
+      '<dt>Route</dt><dd>'+escapeHtml(l.routeTitle)+'</dd>'+
+      '<dt>Goal</dt><dd>'+escapeHtml(b.goal||'Brief generating…')+'</dd>'+
+      '<dt>Stuck on</dt><dd>'+escapeHtml(b.stuck_point||'—')+'</dd>'+
+      '<dt>Constraints</dt><dd>'+escapeHtml(b.constraints||'—')+'</dd>'+
+      '<dt>Recommended</dt><dd>'+escapeHtml(b.recommended_offer||'—')+(b.fit_reason?' — '+escapeHtml(b.fit_reason):'')+'</dd>'+
+      '<dt>Call talking points</dt><dd>'+(Array.isArray(b.talking_points)?b.talking_points.map(escapeHtml).join('<br>'):'—')+'</dd>'+
+      '<dt>Likely objections</dt><dd>'+(Array.isArray(b.likely_objections)?b.likely_objections.map(escapeHtml).join('<br>'):'—')+'</dd></dl>'+
+      '<details><summary>Full session transcript</summary><pre></pre></details>';
+    el.querySelector('pre').textContent = l.transcript || '';
+    list.appendChild(el);
+  });
+}
+$('#copyCsv').onclick = async ()=>{
+  const q = v => '"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows = [['Date','Name','WhatsApp','Email','Route','Segment','AQLP fit','Recommended','Goal','Stuck on']].concat(
+    leads.map(l=>{const b=l.brief||{}; return [new Date(l.createdAt).toISOString(),l.name,l.whatsapp,l.email,l.routeTitle,b.segment,b.aqlp_fit,b.recommended_offer,b.goal,b.stuck_point];}));
+  try{ await navigator.clipboard.writeText(rows.map(r=>r.map(q).join(',')).join('\n')); $('#copyCsv').textContent='Copied ✓'; setTimeout(()=>$('#copyCsv').textContent='Copy as CSV',1500);}catch(e){}
+};
+
+// ---------- tabs / new ----------
+function showTab(t){
+  const leadsOn = t==='leads';
+  $('#tabMentor').setAttribute('aria-pressed', !leadsOn); $('#tabLeads').setAttribute('aria-pressed', leadsOn);
+  $('#mentorView').hidden = leadsOn; $('#leadsView').hidden = !leadsOn; $('#composer').hidden = leadsOn;
+  if (leadsOn){ if (db) subscribeLeads(); else $('#leadList').innerHTML='<div class="empty">The lead list needs this page open in claude.ai.</div>'; }
+}
+$('#tabMentor').onclick = ()=>showTab('mentor');
+$('#tabLeads').onclick = ()=>showTab('leads');
+$('#newBtn').onclick = ()=>{
+  if (ctl) ctl.abort();
+  turns = []; route = null; leadSaved = false; pendingImages = []; renderAttach();
+  chatEl.innerHTML = ''; chatEl.hidden = true; $('#welcome').hidden = false; showTab('mentor'); $('#scroller').scrollTop = 0;
+};
+$('#stopBtn').onclick = ()=>{ if (ctl) ctl.abort(); };
+
+// ---------- composer ----------
+function autosize(){ input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,160)+'px'; sendBtn.disabled = busy || (!input.value.trim() && !pendingImages.length); }
+input.addEventListener('input', autosize);
+input.addEventListener('keydown', e=>{ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(input.value); } });
+sendBtn.onclick = ()=> send(input.value);
+$('#attachBtn').onclick = ()=> $('#fileIn').click();
+$('#fileIn').onchange = e=>{
+  const max = caps?.images?.maxCount || 3;
+  const types = caps?.images?.mediaTypes || ['image/jpeg','image/png','image/webp','image/gif'];
+  for (const f of e.target.files){ if (types.includes(f.type) && pendingImages.length < max) pendingImages.push(f); }
+  e.target.value=''; renderAttach(); autosize();
+};
+function renderAttach(){
+  const r = $('#attachRow'); r.innerHTML=''; r.hidden = !pendingImages.length;
+  pendingImages.forEach((f,i)=>{ const w=document.createElement('div'); w.className='th'; const im=document.createElement('img'); im.src=URL.createObjectURL(f); const x=document.createElement('button'); x.textContent='×'; x.onclick=()=>{pendingImages.splice(i,1); renderAttach(); autosize();}; w.append(im,x); r.appendChild(w); });
+}
+
+// ---------- boot ----------
+renderStarters();
+(async ()=>{
+  if (!window.claude || !claude.use){ $('#noAI').hidden = false; return; }
+  claude.use('db').then(x=>{ db = x; }).catch(()=>{});
+  try{ sample = await claude.use('sample'); }catch(e){ sample = null; }
+  if (!sample){ $('#noAI').hidden = false; return; }
+  try{ caps = await sample.limits(); }catch(e){ caps = null; }
+  if (caps && caps.images) $('#attachBtn').hidden = false;
+})();
+</script>
+</body>
+</html>
